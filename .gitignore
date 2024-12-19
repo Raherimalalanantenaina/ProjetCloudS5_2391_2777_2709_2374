@@ -1,1 +1,39 @@
-.class
+# Ignorer les fichiers compilés
+*.class
+
+# Ignorer les fichiers générés par Maven et Gradle
+target/
+*.jar
+*.war
+
+# Ignorer les fichiers générés par IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Ignorer les fichiers générés par Eclipse
+.project
+.classpath
+.settings/
+.target/
+
+# Ignorer les fichiers sensibles ou spécifiques à l'environnement
+.env
+application.yml
+application.properties
+application-*.yml
+application-*.properties
+
+# Ignorer les fichiers de logs
+logs/
+*.log
+
+# Ignorer les fichiers temporaires
+*.tmp
+*.swp
+
+# Ignorer les fichiers système
+.DS_Store
+Thumbs.db
