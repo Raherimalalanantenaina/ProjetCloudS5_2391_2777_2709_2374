@@ -10,6 +10,9 @@ import web.projet.fournisseurIdentite.services.UtilisateurService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 @RestController
@@ -37,6 +40,16 @@ public class UtilisateurController {
         try {
             String url = utilisateurService.inscrireUtilisateur(dto);
             return ResponseEntity.ok(url);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/valider-compte")
+    public ResponseEntity<String> validerCompte(@RequestParam String token) {
+        try {
+            utilisateurService.validerCompte(token);
+            return ResponseEntity.ok("Compte validé avec succès !");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
