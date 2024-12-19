@@ -1,0 +1,7 @@
+INSERT INTO sexes(sexe) VALUES
+('masculin'),
+('feminin');
+
+INSERT INTO configurations(cle,valeur) VALUES
+('nbtentative','3'),
+('token_lifetime','2000');
