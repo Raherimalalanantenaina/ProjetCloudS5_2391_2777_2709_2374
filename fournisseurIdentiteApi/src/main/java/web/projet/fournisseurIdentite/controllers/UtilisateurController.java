@@ -41,4 +41,14 @@ public class UtilisateurController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
+    @GetMapping("/valider-compte")
+    public ResponseEntity<String> validerCompte(@RequestParam String token) {
+        try {
+            utilisateurService.validerCompte(token);
+            return ResponseEntity.ok("Compte validé avec succès !");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 }
