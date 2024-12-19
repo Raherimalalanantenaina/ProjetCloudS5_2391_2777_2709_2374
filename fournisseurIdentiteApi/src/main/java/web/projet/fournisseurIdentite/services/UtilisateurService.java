@@ -11,9 +11,11 @@ import web.projet.fournisseurIdentite.dtos.utilisateur.UtilisateurDTO;
 import web.projet.fournisseurIdentite.mail.EmailConfig;
 import web.projet.fournisseurIdentite.mail.EmailService;
 import web.projet.fournisseurIdentite.mappers.UtilisateurMapper;
+import web.projet.fournisseurIdentite.models.CodePin;
 import web.projet.fournisseurIdentite.models.Configuration;
 import web.projet.fournisseurIdentite.models.Token;
 import web.projet.fournisseurIdentite.models.Utilisateur;
+import web.projet.fournisseurIdentite.repositories.CodePinRepository;
 import web.projet.fournisseurIdentite.repositories.ConfigurationRepository;
 import web.projet.fournisseurIdentite.repositories.SexeRepository;
 import web.projet.fournisseurIdentite.repositories.TokenRepository;
@@ -32,6 +34,8 @@ public class UtilisateurService {
     private TokenService tokenService;
     @Autowired
     private ConfigurationRepository configurationRepository;
+    @Autowired
+    private CodePinRepository codePinRepository;
     
     public UtilisateurDTO save(UtilisateurDTO data) {
         Utilisateur utilisateur = utilisateurMapper.toUtilisateur(data);
@@ -181,6 +185,66 @@ public class UtilisateurService {
         utilisateur.setNb_tentative(Integer.parseInt(configuration.getValeur()));
         utilisateurRepository.save(utilisateur);
         tokenRepository.delete(token);
+    }
+
+       public String connexion(String email,String mdp) throws Exception{
+        Optional<Utilisateur> utilisateurOpt=utilisateurRepository.findByEmail(email);
+        if(!utilisateurOpt.isPresent()){
+            throw new RuntimeException("L'adresse email est introuvable");
+        }
+        Utilisateur utilisateur=utilisateurOpt.get();
+        if(utilisateur.getEtat()==false){
+            throw new RuntimeException("Votre compte est pas encore valide");
+        }
+        if(utilisateur.getNb_tentative()==0){
+            UtilisateurDTO utilisateurDTO=utilisateurMapper.toUtilisateurDTO(utilisateur);
+            supprimerCodePinParUtilisateur(utilisateur);
+            return "0x0:"+demanderReinitialisation(utilisateurDTO);
+        }
+        System.out.println(BCrypt.hashpw(mdp, BCrypt.gensalt(10)));
+        if (!BCrypt.checkpw(mdp, utilisateur.getMot_de_passe())) {
+            
+            incrementNbTentative(utilisateur);
+            
+            throw new RuntimeException("Mot de passe incorrect");
+        }
+        return email;
+    }
+
+    public void supprimerCodePinParUtilisateur(Utilisateur utilisateur) {
+        Optional<CodePin> codePinOpt = codePinRepository.findByUtilisateur(utilisateur);
+        if (codePinOpt.isPresent()) {
+            codePinRepository.delete(codePinOpt.get());
+        }
+    }
+    public String demanderReinitialisation(UtilisateurDTO dto) throws Exception {
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(dto.getEmail()).orElseThrow(() -> new RuntimeException("utilisateur untrouvable"));
+        Token newToken = tokenRepository.save(tokenService.creationToken(utilisateur));
+        String newUrl = creationUrlReinitialisation(newToken);
+        emailReinitialisation(dto, newUrl);
+        return newUrl;
+    }
+    private void incrementNbTentative(Utilisateur utilisateur) {
+        utilisateur.setNb_tentative(utilisateur.getNb_tentative() - 1);
+        System.out.println("Utilisateur defaut : " + (utilisateur.getNb_tentative() - 1));
+        utilisateurRepository.save(utilisateur);
+    }
+    public String creationUrlReinitialisation(Token token){
+    
+        String validationUrl = "http://localhost:8080/utilisateurs/reinitialiser-tentative?token=" + token.getToken();
+        return validationUrl;
+    }
+    public void emailReinitialisation(UtilisateurDTO dto,String validationUrl) throws Exception{
+        EmailConfig config = new EmailConfig("smtp.gmail.com", 587, "rarianamiadana@gmail.com", "mgxypljhfsktzlbk");
+        String destinataires = dto.getEmail();
+
+        String sujet = "Reinitialiser tentative Email";
+    
+        String contenuHTML = "Cliquer sur cette url pour reinitialiser vos tentative: "+validationUrl;
+        
+    
+        EmailService emailService = new EmailService(config);
+        emailService.sendEmail(destinataires, sujet, contenuHTML);  
     }
 
 }
