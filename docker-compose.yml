@@ -1,19 +1,6 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: postgres_container
-    environment:
-      POSTGRES_DB: fournisseurapi
-      POSTGRES_USER: fournisseurapi
-      POSTGRES_PASSWORD: fournisseurapi
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres:/docker-entrypoint-initdb.d 
-
   springboot-app:
     build: ./fournisseurIdentiteApi
     container_name: springboot_container
@@ -27,7 +14,20 @@ services:
       - "8080:8080"
     depends_on:
       - postgres
-
+    command: ["sh", "-c", "until nc -z -v -w30 db 5432; do echo 'Waiting for database...'; sleep 1; done; java -jar /app/app.jar"]
+  
+  postgres:
+    image: postgres:15
+    container_name: postgres_container
+    environment:
+      POSTGRES_DB: fournisseurapi
+      POSTGRES_USER: fournisseurapi
+      POSTGRES_PASSWORD: fournisseurapi
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres:/docker-entrypoint-initdb.d 
 volumes:
   postgres_data:
     driver: local
