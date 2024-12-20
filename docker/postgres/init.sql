@@ -5,7 +5,7 @@ CREATE TABLE sexes(
 );
 
 CREATE TABLE configurations(
-   id_Configurations SERIAL,
+   id_Configuration SERIAL,
    cle VARCHAR(50)  NOT NULL,
    valeur VARCHAR(50)  NOT NULL,
    PRIMARY KEY(Id_Configurations)
@@ -29,7 +29,7 @@ CREATE TABLE utilisateurs(
 CREATE TABLE tokens(
    id_token SERIAL,
    token VARCHAR(250)  NOT NULL,
-   date_expiraton TIMESTAMP NOT NULL,
+   date_expiration TIMESTAMP NOT NULL,
    id_utilisateurs INTEGER NOT NULL,
    PRIMARY KEY(id_token),
    UNIQUE(token),
