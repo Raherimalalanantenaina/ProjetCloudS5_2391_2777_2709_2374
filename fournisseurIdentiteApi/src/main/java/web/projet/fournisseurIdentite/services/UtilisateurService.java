@@ -322,5 +322,6 @@ public class UtilisateurService {
     private void resetNbTentative(Utilisateur utilisateur) {
         utilisateur.setNb_tentative(getMaxAttempts());
         utilisateurRepository.save(utilisateur);
-    }      
+    }
+          
 }
