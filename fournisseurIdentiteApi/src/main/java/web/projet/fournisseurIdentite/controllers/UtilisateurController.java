@@ -82,4 +82,21 @@ public class UtilisateurController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Utilisateur introuvable.");
     }
+
+    @PostMapping("/valider-pin")
+    public ResponseEntity<String> validationPin(@RequestBody ValidationPinDTO validationPinDTO) {
+        try {
+            String tokens = utilisateurService.validationPin(validationPinDTO);
+            if (tokens != null && tokens.startsWith("0x0:")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(tokens.replace("0x0:", ""));
+            }
+            if (tokens == null) {
+                throw new RuntimeException();
+            }
+            return ResponseEntity.ok(tokens);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Code PIN non valide ou expiré");
+        }
+    }
 }

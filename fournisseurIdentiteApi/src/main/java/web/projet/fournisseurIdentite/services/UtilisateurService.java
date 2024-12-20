@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import web.projet.fournisseurIdentite.dtos.utilisateur.UtilisateurDTO;
+import web.projet.fournisseurIdentite.dtos.utilisateur.ValidationPinDTO;
 import web.projet.fournisseurIdentite.mail.EmailConfig;
 import web.projet.fournisseurIdentite.mail.EmailService;
 import web.projet.fournisseurIdentite.mappers.UtilisateurMapper;
@@ -247,4 +248,53 @@ public class UtilisateurService {
         emailService.sendEmail(destinataires, sujet, contenuHTML);  
     }
 
+    public String  validationPin(ValidationPinDTO validationPinDTO) throws Exception {
+        String email = validationPinDTO.getEmail();
+        int codePin = validationPinDTO.getCodepin();
+        
+        
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé."));
+    
+        CodePin codePinEntity = codePinRepository.findByCodepin(codePin)
+        .orElse(null);
+        
+        if (utilisateur.getNb_tentative() == 0 ) {
+            
+            UtilisateurDTO utilisateurDTO=utilisateurMapper.toUtilisateurDTO(utilisateur);
+            // codePinRepository.delete(codePinEntity);
+            return "0x0:"+demanderReinitialisation(utilisateurDTO);
+        }
+    
+        
+    
+        if (codePinEntity != null && !codePinEntity.getDateExpiration().isBefore(LocalDateTime.now())) {
+            resetNbTentative(utilisateur);
+            Token token=tokenService.creationToken(utilisateur);
+            token=tokenService.genererDateExpiration(token);
+            tokenRepository.save(token);
+            codePinRepository.delete(codePinEntity);
+            return token.getToken();
+        } 
+       
+            incrementNbTentative(utilisateur);
+            return null;
+           
+        
+        
+    
+
+    }
+    
+
+
+    private int getMaxAttempts() {
+        Configuration conf=configurationRepository.findByCle("nbtentative").get();
+        int value=Integer.parseInt(conf.getValeur());
+        return value;
+    }
+    private void resetNbTentative(Utilisateur utilisateur) {
+        utilisateur.setNb_tentative(getMaxAttempts());
+        utilisateurRepository.save(utilisateur);
+    }   
 }
