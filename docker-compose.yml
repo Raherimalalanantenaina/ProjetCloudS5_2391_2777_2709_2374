@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  springboot-app:
+    build: ./fournisseurIdentiteApi
+    container_name: springboot_container
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fournisseurapi
+      SPRING_DATASOURCE_USERNAME: fournisseurapi
+      SPRING_DATASOURCE_PASSWORD: fournisseurapi
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    command: ["sh", "-c", "until nc -z -v -w30 db 5432; do echo 'Waiting for database...'; sleep 1; done; java -jar /app/app.jar"]
+  
+  postgres:
+    image: postgres:15
+    container_name: postgres_container
+    environment:
+      POSTGRES_DB: fournisseurapi
+      POSTGRES_USER: fournisseurapi
+      POSTGRES_PASSWORD: fournisseurapi
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres:/docker-entrypoint-initdb.d 
+volumes:
+  postgres_data:
+    driver: local
